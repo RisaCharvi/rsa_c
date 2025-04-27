@@ -610,11 +610,6 @@ bool bi_modinv(const BigInt *a, const BigInt *m, BigInt **inv)
      }
 
 
-modinv_success_cleanup_std: 
-    bi_free(t_prev); bi_free(t_curr); bi_free(s_prev); bi_free(s_curr);
-    bi_free(zero); bi_free(one); bi_free(q); bi_free(tmp_r);
-    bi_free(term); bi_free(tmp_s); bi_free(sub_res);
-
     return (*inv != NULL);
 
 modinv_error_cleanup_std: 
