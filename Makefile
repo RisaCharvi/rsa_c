@@ -20,4 +20,3 @@ test: clean all
 
 clean:
 	@rm -rf $(EXEC) $(OBJ) *.out private.key public.key 
-
