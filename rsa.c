@@ -2,9 +2,9 @@
 #include "rsa.h"
 #include <stdio.h>
 #include <stdint.h>
-#include <stdlib.h> // For exit() if modinv fails
+#include <stdlib.h> 
 
-
+//Hardcoded P, Q, and E (hard to generate big valid primes)
 static const uint64_t P_VAL = 4294967311ULL;   /* 0x10000000F (33 bits) */
 static const uint64_t Q_VAL = 4294967357ULL;   /* 0x10000003D (33 bits) */
 static const uint64_t E_VAL = 65537;           /* public exponent       */
@@ -13,16 +13,13 @@ void rsa_generate_keypair(RSAKey *pub, RSAKey *priv, size_t bits_unused)
 {
     (void)bits_unused;                    
 
-    // Represent P, Q, E, P-1, Q-1 as BigInts
     BigInt *p_bi       = bi_from_u64(P_VAL);
     BigInt *q_bi       = bi_from_u64(Q_VAL);
     BigInt *p_minus_1  = bi_from_u64(P_VAL - 1);
     BigInt *q_minus_1  = bi_from_u64(Q_VAL - 1);
     BigInt *e_bi       = bi_from_u64(E_VAL);
-    // BigInt *one        = bi_from_u64(1); 
     BigInt *n_bi       = NULL;
     BigInt *phi_bi     = NULL;
-    // BigInt *phi_minus_1= NULL; 
     BigInt *d_bi       = NULL;
 
     if (!p_bi || !q_bi || !p_minus_1 || !q_minus_1 || !e_bi) {
