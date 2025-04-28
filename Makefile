@@ -12,7 +12,7 @@ all: $(OBJ)
 	$(GCC) $(OBJ) -o $(EXEC)
 
 test: clean all
-	./$(EXEC) enc input.txt enc.out
+	./$(EXEC) enc cipher.txt enc.out
 
 	./$(EXEC) dec enc.out dec.out
 
