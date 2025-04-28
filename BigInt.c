@@ -177,7 +177,7 @@ static void bi_sub_inplace(BigInt *acc, const BigInt *b)
         acc->limbs[i] = (uint32_t)diff; // Lower 32 bits
 
         // Determine next borrow: 1 if diff was negative, 0 otherwise
-        // Check the 64th bit (sign bit if interpreted as signed)
+        // Check the 64th bit 
         borrow = (diff >> 63) & 1;
     }
     // If final borrow is non-zero, it implies acc < b, which violates preconditions
@@ -226,7 +226,7 @@ void bi_mul(const BigInt *a, const BigInt *b, BigInt **res)
         // Add final carry to the next limb position
         // This position might already have a value from the outer loop's previous iteration
         if (carry > 0) {
-            // Propagate carry if necessary (handle potential chain reaction of carries)
+            // Propagate carry if necessary 
             size_t k = i + b->len;
             while (k < r->len && carry > 0) {
                  uint64_t sum = (uint64_t)r->limbs[k] + carry;
@@ -234,7 +234,7 @@ void bi_mul(const BigInt *a, const BigInt *b, BigInt **res)
                  carry = sum >> 32;
                  k++;
             }
-            // Assert if carry still exists beyond allocated length (shouldn't happen)
+            // Assert if carry still exists beyond allocated length
             assert(carry == 0 && "Carry propagation exceeded allocated length in bi_mul");
         }
     }
@@ -378,7 +378,7 @@ static BigInt *bi_shift_left_bits(const BigInt *n, size_t k)
             
             carry = (uint32_t)(current_val >> (32 - bit_shift));
         }
-        // Handle the final carry if any
+        
         if (carry > 0) {
              if (i_res < r->len) {
                 r->limbs[i_res] = carry;
@@ -402,21 +402,19 @@ void bi_mod(const BigInt *a, const BigInt *m, BigInt **res)
     
 }
 
-void bi_modexp(const BigInt *base, const BigInt *exp,
-               const BigInt *mod,  BigInt **res)
+void bi_modexp(const BigInt *base, const BigInt *exp, const BigInt *mod,  BigInt **res)
 {
-    BigInt *x = bi_copy(base);               /* moving base           */
-    BigInt *y = bi_from_u64(1);              /* accumulator (result)  */
-    BigInt *tmp_mul = NULL;                  /* intermediate storage for mul */
-    BigInt *tmp_mod = NULL;                  /* intermediate storage for mod */
-    BigInt *one = NULL;                      /* For modulus check     */
+    BigInt *x = bi_copy(base);               
+    BigInt *y = bi_from_u64(1);              
+    BigInt *tmp_mul = NULL;                 
+    BigInt *tmp_mod = NULL;                  
+    BigInt *one = NULL;                      
 
-    // Basic validity checks
     if (!x || !y) {
         fprintf(stderr, "Error: Allocation failed at start of bi_modexp.\n");
         bi_free(x); bi_free(y); *res = NULL; return;
     }
-    // Modulus must be >= 2 for typical modular exponentiation
+    // Modulus must be >= 2 
     one = bi_from_u64(1);
     if (!one) { goto modexp_error;} 
     if (bi_cmp(mod, one) <= 0) {
@@ -431,7 +429,7 @@ void bi_modexp(const BigInt *base, const BigInt *exp,
     bi_free(x); x = tmp_mod; tmp_mod = NULL;
 
     size_t bits = bi_bitlen(exp);
-    // Handle exp = 0 case (result should be 1)
+    // Handle exp = 0 case 
     if (bits == 1 && exp->limbs[0] == 0) {
         bi_free(x); 
         bi_free(y); 
@@ -548,40 +546,38 @@ bool bi_modinv(const BigInt *a, const BigInt *m, BigInt **inv)
     BigInt *q = NULL, *tmp_r = NULL, *term = NULL, *tmp_s = NULL, *sub_res = NULL;
 
     // Initialize based on standard algorithm for inverse of 'a' mod 'm'
-    t_prev = bi_copy(m);             // t_prev = m
-    t_curr = a_reduced;              // t_curr = a mod m
-    s_prev = bi_from_u64(0);         // s_prev = 0
-    s_curr = bi_from_u64(1);         // s_curr = 1
-    BigInt *zero = bi_from_u64(0);   // Re-initialize zero locally
-    BigInt *one = bi_from_u64(1);    // Re-initialize one locally
+    t_prev = bi_copy(m);             
+    t_curr = a_reduced;              
+    s_prev = bi_from_u64(0);         
+    s_curr = bi_from_u64(1);         
+    BigInt *zero = bi_from_u64(0);   
+    BigInt *one = bi_from_u64(1);    
 
 
     if (!t_prev || !t_curr || !s_prev || !s_curr || !zero || !one) goto modinv_error_cleanup_std;
 
-     while (bi_cmp(t_curr, zero) != 0) { // Loop while current remainder != 0
+     while (bi_cmp(t_curr, zero) != 0) { 
         // Calculate quotient q and remainder r (new t_curr)
-        bi_divmod(t_prev, t_curr, &q, &tmp_r); // tmp_r = t_prev % t_curr
+        bi_divmod(t_prev, t_curr, &q, &tmp_r); 
         if (!q || !tmp_r) goto modinv_error_cleanup_std;
 
-        // Update t: t_prev = t_curr, t_curr = tmp_r
+        
         bi_free(t_prev);
         t_prev = t_curr;
         t_curr = tmp_r; tmp_r = NULL;
 
-        // Update s: new_s = s_prev - q * s_curr (mod m)
-        // term = (q * s_curr) mod m
+        
         bi_mul(q, s_curr, &term);
         if (!term) goto modinv_error_cleanup_std;
-        bi_mod(term, m, &tmp_s);  // tmp_s = term mod m
+        bi_mod(term, m, &tmp_s);  
         if (!tmp_s) goto modinv_error_cleanup_std;
-        bi_free(term); term = tmp_s; tmp_s = NULL; // term = (q*s_curr) mod m
-
-        // Calculate new_s = (s_prev - term + m) mod m
+        bi_free(term); term = tmp_s; tmp_s = NULL; 
+        
         if (bi_cmp(s_prev, term) >= 0) {
             bi_sub(s_prev, term, &sub_res); 
             if (!sub_res) goto modinv_error_cleanup_std;
         } else {
-            // Calculate m - (term - s_prev)
+            
             bi_sub(term, s_prev, &tmp_s); 
             if (!tmp_s) goto modinv_error_cleanup_std;
              assert(bi_cmp(m, tmp_s) >= 0 && "m < (term-s_prev) in modinv");
@@ -639,7 +635,7 @@ void bi_print_hex(const BigInt *n)
         top_idx--;
     }
 
-    // Print most significant limb first, without leading zeros unless it's the only digit
+    
     printf("%x", n->limbs[top_idx]);
     // Print remaining limbs (down to index 0) with leading zeros
     if (top_idx > 0) {
@@ -659,7 +655,7 @@ bool bi_write_hex(FILE *fp,const BigInt *n)
          return !ferror(fp) && fprintf(fp,"\n") > 0;
     }
 
-    // Find the actual most significant non-zero limb for printing
+    // Find the most significant non-zero limb for printing
     size_t top_idx = n->len - 1;
     while (top_idx > 0 && n->limbs[top_idx] == 0) {
         top_idx--;
@@ -689,7 +685,7 @@ BigInt *bi_read_hex(FILE *fp)
         return NULL; 
     }
 
-    // Strip trailing newline/carriage return
+    // Strip trailing newline
     while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r')) {
         line[--len] = 0; 
     }
@@ -727,8 +723,8 @@ BigInt *bi_read_hex(FILE *fp)
 
         if (chunk_len == 0) break; 
 
-        // Extract hex chunk into a temporary buffer for strtoul
-        char buf[9] = {0}; // 8 hex chars + null terminator
+        
+        char buf[9] = {0}; 
         memcpy(buf, line + start_pos, chunk_len);
 
         
@@ -751,7 +747,7 @@ BigInt *bi_read_hex(FILE *fp)
 
         n->limbs[i] = (uint32_t)limb_val_ull;
 
-        // Move position in hex string
+        
         if (current_hex_pos < chunk_len) { 
              break;
         }

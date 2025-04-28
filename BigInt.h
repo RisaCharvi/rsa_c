@@ -26,11 +26,11 @@ void bi_add(const BigInt *a, const BigInt *b, BigInt **res);
 void bi_sub(const BigInt *a, const BigInt *b, BigInt **res);      // a must be greater than b
 void bi_mul(const BigInt *a, const BigInt *b, BigInt **res);      
 void bi_mod(const BigInt *a, const BigInt *m, BigInt **res);      
-// Calculates q = floor(a / m), r = a mod m
-void bi_divmod (const BigInt *a, const BigInt *m, BigInt **q_res, BigInt **r_res);
-void bi_modexp (const BigInt *base, const BigInt *exp, const BigInt *mod,  BigInt **res);                    
-void bi_gcd    (const BigInt *a, const BigInt *b, BigInt **res);      
-bool bi_modinv (const BigInt *a, const BigInt *m, BigInt **inv);// inv(a) mod m
+
+void bi_divmod(const BigInt *a, const BigInt *m, BigInt **q_res, BigInt **r_res);
+void bi_modexp(const BigInt *base, const BigInt *exp, const BigInt *mod,  BigInt **res);                    
+void bi_gcd(const BigInt *a, const BigInt *b, BigInt **res);      
+bool bi_modinv(const BigInt *a, const BigInt *m, BigInt **inv);// inv(a) mod m
 
 void    bi_print_hex(const BigInt *n);                 
 bool    bi_write_hex(FILE *fp, const BigInt *n);      

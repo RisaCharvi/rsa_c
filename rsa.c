@@ -11,6 +11,7 @@ static const uint64_t E_VAL = 65537;           /* public exponent       */
 
 void rsa_generate_keypair(RSAKey *pub, RSAKey *priv, size_t bits_unused)
 {
+    // Example Solution
     (void)bits_unused;                    
 
     BigInt *p_bi       = bi_from_u64(P_VAL);
