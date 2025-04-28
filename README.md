@@ -2,121 +2,174 @@
 
 ## Introduction to RSA
 
-RSA is a public-key cryptosystem. Its security relies on the difficulty of factoring large composite numbers. It uses a pair of keys: a public key for encryption and a private key for decryption.
+RSA is a foundational public-key cryptosystem. Its security is based on the mathematical difficulty of factoring large numbers. It enables secure communication by using a pair of mathematically linked keys: a public key for encrypting messages and a private key for decrypting them.
 
-The core of RSA involves modular arithmetic with very large integers. Standard C data types like `int` or `long long` are not large enough to hold the numbers required for secure RSA. This project provides a custom `BigInt` library to handle these arbitrary-precision integers.
+At its heart, RSA involves performing arithmetic operations (like multiplication, subtraction, and modular exponentiation) on extremely large integers. Standard C data types (`int`, `long long`) cannot hold numbers of the size required for secure RSA. This project provides a custom **Arbitrary-Precision Integer library (`BigInt`)** to handle these large numbers.
 
-You will notice the `BigInt` structure uses an array of `uint32_t`. A `uint32_t` is an **unsigned integer** guaranteed to be exactly **32 bits** wide. In the context of the `BigInt` library, these `uint32_t` values are treated as the "digits" or "limbs" of the very large number, stored in little-endian order. This allows the library to represent and perform arithmetic on numbers far larger than a single `uint64_t` can hold, by treating the large number as a sequence of these 32-bit chunks.
+You will see that the `BigInt` structure uses an array of `uint32_t`. A `uint32_t` is an **unsigned integer** guaranteed to be exactly **32 bits** wide. In the `BigInt` library, these `uint32_t` values are treated as the "digits" or "limbs" of a very large number. By using an array of these 32-bit limbs, the library can represent and perform calculations on numbers far larger than could fit into a single 64-bit variable, effectively treating the large number as a sequence of these chunks.
 
 ## Assignment Task: Implementing RSA Key Pair Generation
 
-Your task is to complete or modify the `rsa_generate_keypair` function in `rsa.c`. This function is responsible for generating the public and private keys that are essential for the RSA algorithm.
+Your primary task is to complete or modify the `rsa_generate_keypair` function in `rsa.c`. This function is responsible for generating the public and private keys that are essential for the RSA algorithm to work.
 
-For this assignment, the prime numbers $p$ and $q$, and the public exponent $e$, are **provided as hardcoded values** in `rsa.c` (`P_VAL`, `Q_VAL`, and `E_VAL`). Generating truly random, cryptographically secure large prime numbers is a complex task involving primality testing and is beyond the scope of this particular assignment. Therefore, you will use these fixed values to implement the subsequent steps of key generation.
+For this assignment, the necessary prime numbers $p$ and $q$, and the public exponent $e$, are **provided as hardcoded constants** (`P_VAL`, `Q_VAL`, and `E_VAL`) within the `rsa.c` file. Generating truly random, cryptographically secure large prime numbers is a complex process that is beyond the scope of this particular assignment. Therefore, you will use these fixed values to implement the subsequent steps of key generation.
 
-The process of generating an RSA key pair using the provided values involves the following steps. Your task is to translate these steps into C code using the available `BigInt` library functions:
+The process of generating an RSA key pair using the provided values involves the following mathematical steps. Your goal is to translate these steps into C code using the available `BigInt` library functions:
 
-1.  **Start with the given primes $p$ and $q$, and public exponent $e$.**
-    * These values are available as `uint64_t` constants `P_VAL`, `Q_VAL`, and `E_VAL` in `rsa.c`.
-    * You will need to represent these standard integer values as the custom `BigInt` structures to perform calculations using the `BigInt` library functions.
+1.  **Start with the given primes** $p$ **and** $q$**, and public exponent** $e$**.**
 
-2.  **Calculate the modulus, $n$.**
+    * These are your starting ingredients, provided as `uint64_t` constants in `rsa.c`. You will need to represent these standard integer values as the custom `BigInt` structures to perform calculations using the `BigInt` library functions.
+
+2.  **Calculate the modulus,** $n$**.**
+
     * **Mathematical Step:** $n = p \times q$.
-    * **Why:** The modulus $n$ is the foundation of both the public and private keys. All encryption and decryption operations in RSA are performed modulo $n$. This value, along with the public exponent $e$, forms the public key. It is also part of the private key.
-    * **Implementation Focus:** You will need to perform a multiplication operation with large integers ($p$ and $q$ represented as `BigInt`s) to find $n$.
 
-3.  **Calculate Euler's totient function of $n$, denoted as $\phi(n)$.**
+    * **What this means:** The modulus $n$ is a fundamental component of both the public and private keys. All the cryptographic operations (encryption and decryption) are performed modulo $n$.
+
+    * **Your implementation:** You will need to use a `BigInt` function that performs multiplication to calculate the product of your $p$ and $q$ `BigInt`s.
+
+3.  **Calculate Euler's totient function of** $n$**, denoted as** $\phi(n)$**.**
+
     * **Mathematical Step:** $\phi(n) = (p-1) \times (q-1)$ for distinct primes $p$ and $q$.
-    * **Why:** The totient value $\phi(n)$ is essential for calculating the private exponent $d$. The mathematical relationship between $e$ and $d$ is defined modulo $\phi(n)$. This $\phi(n)$ value is a temporary value needed only during key generation.
-    * **Implementation Focus:** You will need to perform subtraction operations (subtracting 1 from $p$ and 1 from $q$) and then a multiplication operation to find $\phi(n)$.
 
-4.  **Calculate the private exponent, $d$.**
-    * **Mathematical Step:** $d \equiv e^{-1} \pmod{\phi(n)}$. This means $d$ is the unique integer between 1 and $\phi(n)$ such that when $d$ is multiplied by $e$, the result has a remainder of 1 when divided by $\phi(n)$.
-    * **Why:** The private exponent $d$ is the secret key used for decryption. The mathematical properties of modular arithmetic ensure that decrypting a ciphertext $c$ using the private key $(n, d)$ recovers the original plaintext message $m$, i.e., $m \equiv c^d \pmod{n}$.
-    * **Implementation Focus:** You will need to perform a modular multiplicative inverse operation with $e$ as the base and $\phi(n)$ as the modulus to find $d$.
+    * **What this means:** The value $\phi(n)$ represents the count of positive integers up to $n$ that are relatively prime to $n$. This value is crucial for finding the private exponent $d$. It's a temporary value needed only during the key generation process.
+
+    * **Your implementation:** You will need to use `BigInt` functions to perform subtraction (subtracting 1 from $p$ and 1 from $q$) and then multiplication to find the product of these results.
+
+4.  **Calculate the private exponent,** $d$**.**
+
+    * **Mathematical Step:** $d \equiv e^{-1} \pmod{\phi(n)}$. This is read as "$d$ is congruent to the modular multiplicative inverse of $e$ modulo $\phi(n)$." It means $d$ is the unique integer (within a certain range) such that when $d$ is multiplied by $e$, the result has a remainder of 1 when divided by $\phi(n)$.
+
+    * **What this means:** The private exponent $d$ is the secret part of your key pair, used for decryption. The mathematical properties of this relationship ensure that decryption correctly reverses the encryption process.
+
+    * **Your implementation:** You will need to use a `BigInt` function that calculates the modular multiplicative inverse. You will provide this function with your $e$ `BigInt` and your $\phi(n)$ `BigInt` to find the resulting $d$ `BigInt`.
 
 5.  **Populate the `RSAKey` structures.**
-    * The public key structure (`pub`) needs to store the modulus $n$ and the public exponent $e$.
-    * The private key structure (`priv`) needs to store the modulus $n$ and the private exponent $d$. Make sure to handle the modulus $n$ correctly for both structures; they should each have their own copy if necessary.
+
+    * The `RSAKey` structure (defined in `rsa.h`) holds the modulus `n` and an exponent (`exp`).
+
+    * For the public key structure (`pub`), you will assign the `BigInt` you calculated for $n$ and the `BigInt` you created for $e$.
+
+    * For the private key structure (`priv`), you will assign the `BigInt` you calculated for $d$ and a copy of the `BigInt` for $n$.
 
 6.  **Clean up allocated memory.**
-    * The `BigInt` functions often allocate memory dynamically. You are responsible for freeing any `BigInt` structures that you create during the calculation steps but do not end up storing in the final `pub` or `priv` `RSAKey` structures. Proper memory management is crucial in C.
 
-By following these steps and correctly applying the available `BigInt` functions, you will implement the RSA key pair generation process using the provided parameters.
+    * As you perform calculations, the `BigInt` functions will allocate memory for the results. Any `BigInt` structures that are temporary and not assigned to the final `pub` or `priv` `RSAKey` structures must be freed to prevent memory leaks.
 
-## Relevant Files and Functions
+By implementing these steps using the `BigInt` library, you will successfully generate an RSA key pair based on the provided parameters.
 
-You will primarily be working in the following files:
+## Relevant Files
 
-* `main.c`: Contains the main function, command-line argument parsing, and the high-level encryption/decryption file handling logic. It uses the `rsa.h` and `BigInt.h` functions.
-* `rsa.c`: Implements the RSA algorithm functions, including key pair generation, encryption, and decryption. It relies heavily on the BigInt library for arithmetic operations. **Contains the hardcoded values for p, q, and e.**
-* `rsa.h`: Header file for `rsa.c`, defining the `RSAKey` structure and function prototypes for RSA operations.
-* `BigInt.c`: Implements the custom arbitrary-precision integer arithmetic library.
-* `BigInt.h`: Contains the declarations for the `BigInt` structure and its functions.
+You will primarily be working with the following files:
 
-To complete the key generation task, you will primarily need to understand and utilize the following functions from the `BigInt` library. You should consult the `BigInt.h` header file for their exact signatures and the `BigInt.c` source file to understand their behavior if needed:
+* `main.c`: Contains the main program logic, including command-line argument parsing and the high-level flow for encryption and decryption, which calls your `rsa_generate_keypair` function.
 
-* `BigInt *bi_from_u64(uint64_t v)`
-* `BigInt *bi_copy(const BigInt *src)`
-* `void bi_mul(const BigInt *a, const BigInt *b, BigInt **res)`
-* `void bi_sub(const BigInt *a, const BigInt *b, BigInt **res)`
-* `bool bi_modinv(const BigInt *a, const BigInt *m, BigInt **inv)`
-* `void bi_free(BigInt *n)`
+* `rsa.c`: This is where you will implement the `rsa_generate_keypair` function. It also contains the hardcoded values for $p, q,$ and $e$, and the implementations for RSA encryption and decryption (which rely on key generation being correct).
 
-Your task is to determine how to use these functions in sequence within `rsa_generate_keypair` to perform the calculations described in the steps above.
+* `rsa.h`: The header file for `rsa.c`. It defines the `RSAKey` structure and declares the functions for RSA operations, including `rsa_generate_keypair`.
+
+* `BigInt.c`: Contains the implementation details of the arbitrary-precision integer library. This is where the actual arithmetic operations on large numbers are performed.
+
+* `BigInt.h`: The header file for `BigInt.c`. It defines the `BigInt` structure and declares all the functions available in the `BigInt` library.
+
+## Relevant `BigInt` Functions
+
+To complete the key generation task, you will need to utilize several functions from the `BigInt` library. You should explore the `BigInt.h` header file to understand the exact signatures and purposes of the functions available. You will need functions for:
+
+* Converting standard integers (`uint64_t`) into `BigInt` structures.
+
+* Creating a copy of an existing `BigInt`.
+
+* Performing multiplication of two `BigInt`s.
+
+* Performing subtraction of two `BigInt`s.
+
+* Calculating the modular multiplicative inverse of two `BigInt`s.
+
+* Freeing the memory allocated for `BigInt` structures.
+
+Your task is to identify the specific `BigInt` functions that correspond to these operations and use them correctly to perform the calculations outlined in the key generation steps.
 
 ## Your Task Steps:
 
 1.  Open `rsa.c` and locate the `rsa_generate_keypair` function.
-2.  Implement the key generation logic step-by-step as detailed above, using the `BigInt` functions and the hardcoded `P_VAL`, `Q_VAL`, and `E_VAL`.
-3.  Ensure proper memory management by freeing temporary `BigInt`s.
-4.  Assign the final calculated `BigInt`s to the appropriate fields (`n` and `exp`) in the public (`pub`) and private (`priv`) key structures.
-5.  You can use the existing key saving functions (`rsa_save_key`) in `main.c` to verify that your generated keys are being saved correctly.
+
+2.  Implement the key generation logic step-by-step as detailed above, using the appropriate `BigInt` functions and the hardcoded `P_VAL`, `Q_VAL`, and `E_VAL`.
+
+3.  Ensure proper memory management by freeing temporary `BigInt`s that are no longer needed.
+
+4.  Assign the final calculated `BigInt`s for $n$ and $e$ to the public key structure (`pub`) and a copy of the `BigInt` for $n$ and the `BigInt` for $d$ to the private key structure (`priv`).
+
+5.  You can use the existing key saving functions (`rsa_save_key`) in `main.c` to verify that your generated keys are being saved correctly to `public.key` and `private.key`.
 
 By completing this task, you will gain practical experience with the core calculations involved in setting up an RSA system and working with arbitrary-precision integers in C, using provided parameters.
 
-## How to Build and Use (After Implementing Key Generation)
+## How to Build and Run
 
-Follow the standard build instructions:
+A `Makefile` is provided to help you compile the project.
 
-```bash
-make
-```
+* **Compile & Build:** Open your terminal in the project directory and run:
 
-This will compile the source files and create an executable named `rsa_run`.
+    ```bash
+    make
+    ```
 
-Then, you can use the `rsa_run` executable with your implemented key generation:
+    This will compile the source files and create an executable named `rsa_run`.
 
-* **Encryption:** To generate keys and encrypt a file:
+Then, you can use the `rsa_run` executable to test your implemented key generation:
+
+* **Encryption (Generates Keys):** To generate keys (using your `rsa_generate_keypair` function) and encrypt a file:
+
     ```bash
     ./rsa_run enc input.txt cipher.txt
     ```
-    This will use your `rsa_generate_keypair` function to create `public.key` and `private.key` (based on the hardcoded values) and then encrypt `input.txt` into `cipher.txt`.
 
-* **Decryption:** To decrypt a file using the generated private key:
+    This command will call your key generation function, save the generated `public.key` and `private.key` files, and then encrypt `input.txt` into `cipher.txt` using the public key.
+
+* **Decryption:** To decrypt the `cipher.txt` file using the generated private key:
+
     ```bash
     ./rsa_run dec cipher.txt recovered_input.txt
     ```
-    This requires the `private.key` file generated by the encryption step. It will use your generated private key to decrypt `cipher.txt` back into `recovered_input.txt`.
+
+    This command requires the `private.key` file generated by the encryption step. It will load the private key and use it to decrypt `cipher.txt` back into `recovered_input.txt`. You should verify that `recovered_input.txt` matches the original `input.txt`.
 
 ## Implementation Details
 
 ### BigInt Library
 
-The `BigInt` library handles large integers that exceed the standard integer types in C.
-* A `BigInt` is represented by a structure containing a `len` (the number of limbs used) and `limbs` (a pointer to an array of `uint32_t`, representing the digits of the large number in little-endian order).
-* Functions are provided for memory management (`bi_new`, `bi_free`, `bi_copy`), conversion from `uint64_t` (`bi_from_u64`), and utility operations like trimming leading zeros (`bi_trim`), getting the bit length (`bi_bitlen`), and comparison (`bi_cmp`).
-* Core arithmetic operations (`bi_add`, `bi_sub`, `bi_mul`, `bi_mod`) are implemented to work with the `BigInt` structure.
-* More advanced operations crucial for RSA, such as modular exponentiation (`bi_modexp`), greatest common divisor (`bi_gcd`), and modular inverse (`bi_modinv`), are also included.
-* Functions for reading and writing BigInts in hexadecimal format to and from files (`bi_read_hex`, `bi_write_hex`) are provided for key storage.
+The `BigInt` library is designed to handle integers larger than native C types.
+
+* The `BigInt` structure contains `len` (the number of `uint32_t` limbs used) and `limbs` (a pointer to an array of `uint32_t`, storing the number's digits in little-endian order).
+
+* Functions like `bi_new`, `bi_free`, and `bi_copy` manage the memory for `BigInt`s.
+
+* `bi_from_u64` converts a standard 64-bit integer into a `BigInt`.
+
+* `bi_trim` removes leading zero limbs to keep the representation canonical.
+
+* `bi_bitlen` returns the number of significant bits in a `BigInt`.
+
+* `bi_cmp` compares two `BigInt`s.
+
+* Core arithmetic operations (`bi_add`, `bi_sub`, `bi_mul`, `bi_mod`, `bi_divmod`) are implemented to work with the `BigInt` structure.
+
+* Crucial for RSA are `bi_modexp` (modular exponentiation), `bi_gcd` (greatest common divisor), and `bi_modinv` (modular multiplicative inverse).
+
+* Functions for hex encoding/decoding (`bi_read_hex`, `bi_write_hex`) are used for key file storage.
 
 ### RSA Implementation
 
-The RSA implementation in `rsa.c` utilizes the `BigInt` library.
-* Key pair generation (`rsa_generate_keypair`) is where you will implement the calculations using the hardcoded `P_VAL`, `Q_VAL`, and `E_VAL`. The existing code calculates the modulus $n = p \times q$ and the totient $\phi(n) = (p-1) \times (q-1)$. The private exponent $d$ is computed as the modular multiplicative inverse of $e$ modulo $\phi(n)$ using `bi_modinv`.
-* Encryption (`rsa_encrypt`) calculates the ciphertext $c$ from the plaintext message $m$ using the public key $(n, e)$ with the formula $c = m^e \pmod{n}$. This is done using the `bi_modexp` function.
-* Decryption (`rsa_decrypt`) calculates the plaintext message $m$ from the ciphertext $c$ using the private key $(n, d)$ with the formula $m = c^d \pmod{n}$. This also uses the `bi_modexp` function.
-* Key saving and loading (`rsa_save_key`, `rsa_load_key`) are handled by writing and reading the modulus $n$ and the exponent (e or d) in hexadecimal format to and from files, enclosed in simple header and footer lines.
-* The `main.c` file handles reading the input file in chunks, converting each chunk to a `BigInt`, encrypting/decrypting it, and writing the resulting `BigInt` (along with its original chunk length) to the output file in hexadecimal format. It also handles the conversion back from `BigInt` to bytes during decryption.
+The `rsa.c` file implements the RSA algorithm using the `BigInt` library.
+
+* `rsa_generate_keypair` (your task) performs the key generation calculations using the `BigInt` functions and the hardcoded $p, q, e$.
+
+* `rsa_encrypt` uses `bi_modexp` to compute $c = m^e \pmod{n}$.
+
+* `rsa_decrypt` uses `bi_modexp` to compute $m = c^d \pmod{n}$.
+
+* `rsa_save_key` and `rsa_load_key` handle reading/writing keys to files using the `BigInt` hex I/O functions.
+
+* `main.c` handles file input/output, breaking the message into chunks, converting chunks to/from `BigInt`s, and calling the RSA encrypt/decrypt functions.
 
 This project provides a basic, functional implementation of the RSA algorithm for educational purposes, demonstrating the core concepts of asymmetric encryption and the necessity of arbitrary-precision arithmetic for such cryptographic systems.
